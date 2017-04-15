@@ -36,7 +36,6 @@ Adafruit_BNO055 bno = Adafruit_BNO055(55);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_GRB + NEO_KHZ800); //depends on type of pixels!
 
 const int maxWaypoints = 3;
-double waypointsLatLng[maxWaypoints*2]; // 0, 2, 4... are LAT, 1, 3, 5... are LNG
 
 struct Waypoint{
     double LAT;
@@ -46,7 +45,7 @@ struct Waypoint{
         LNG = -1;
     }
 };
-Waypoint savedWaypoints[maxWaypoints];
+Waypoint* savedWaypoints;
 
 struct Buddy{
     double LAT;
@@ -79,11 +78,10 @@ void setup() {
     delay(1000);
     bno.setExtCrystalUse(true);
 
-    for(double coord: waypointsLatLng)
-        coord = -1;
+    savedWaypoints = new Waypoint[maxWaypoints]();
     //TEST CODE
-    waypointsLatLng[0] = 51.508131; //London LAT
-    waypointsLatLng[1] = -0.128002; //London LNG
+    savedWaypoints[0].LAT = 51.508131; //London LAT
+    savedWaypoints[0].LNG = -0.128002; //London LNG
     //TEST CODE
 
     feedGPS();
@@ -104,10 +102,10 @@ void loop() {
         //if max number already set, doesn't set new one
         WAYPOINT_LAT = gps.location.lat();
         WAYPOINT_LON = gps.location.lng();
-        for(int i = 0; i < sizeof(*waypointsLatLng) - 1; i += 2)
-            if(waypointsLatLng[i] != -1){
-                waypointsLatLng[i] = gps.location.lat();
-                waypointsLatLng[i+1] = gps.location.lng();
+        for(int i = 0; i < sizeof(*savedWaypoints) - 1; i += 1)
+            if(savedWaypoints[i].LAT != -1){
+                savedWaypoints[i].LAT = gps.location.lat();
+                savedWaypoints[i].LNG = gps.location.lng();
             }
     }
     
