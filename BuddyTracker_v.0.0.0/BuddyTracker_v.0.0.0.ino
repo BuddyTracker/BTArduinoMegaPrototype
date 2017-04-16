@@ -25,7 +25,7 @@ SoftwareSerial ss(RXPin, TXPin);
 
 static void feedGPS();
 unsigned long timeOfLastFix = 0;
-float fieldOfView = 90; // to be adjusted via potentiometer
+float fieldOfView = 90; // to be adjusted via companion app
 int numLEDs = 7; // must / should be an odd number
 // minus 1 because of center LED, plus 0.5 so that edge LED has same "width" as others
 int degreesPerLED = fieldOfView / (numLEDs - 1 + 0.5);
@@ -41,8 +41,8 @@ struct Waypoint{
     double LAT;
     double LNG;
     Waypoint(){
-        LAT = -1;
-        LNG = -1;
+        LAT = NAN;
+        LNG = NAN;
     }
 };
 Waypoint* savedWaypoints;
@@ -97,13 +97,10 @@ void setup() {
 }
 
 void loop() {
-    if(digitalRead(wayPointButtonPin) == HIGH){
+    if(digitalRead(wayPointButtonPin) == HIGH && sizeof(savedWaypoints) < maxWaypoints){
         //set waypoint
-        //if max number already set, doesn't set new one
-        WAYPOINT_LAT = gps.location.lat();
-        WAYPOINT_LON = gps.location.lng();
         for(int i = 0; i < sizeof(*savedWaypoints) - 1; i += 1)
-            if(savedWaypoints[i].LAT != -1){
+            if(isnan(savedWaypoints[i].LAT) || isnan(savedWaypoints[i].LNG)){
                 savedWaypoints[i].LAT = gps.location.lat();
                 savedWaypoints[i].LNG = gps.location.lng();
             }
@@ -165,17 +162,17 @@ void loop() {
     float headingDegrees = heading * 180/M_PI;
     */
 
-    /*for(Buddy buddy: buddies){
-        int degreesDifference = headingDegrees - buddy.headingDegrees;
+    for(int i = 0; i < buddies.size(); i++){
+        int degreesDifference = headingDegrees - buddies.get(i).headingDegrees;
         if(degreesDifference > 180) degreesDifference -= 360; //correct wraparound
         if(abs(degreesDifference) > fieldOfView / 2)
             break;
         strip.setPixelColor(degreesDifference / degreesPerLED + numLEDs / 2, 150);
-    }*/
-    int degreesDifference = headingDegrees - otherBuddyDegrees[0];
+    }
+    /*int degreesDifference = headingDegrees - otherBuddyDegrees[0];
     if(degreesDifference > 180) degreesDifference -= 360; //correct wraparound
     if(!(abs(degreesDifference) > fieldOfView / 2))
-        strip.setPixelColor(degreesDifference / degreesPerLED + numLEDs / 2, 0, 0, 255);
+        strip.setPixelColor(degreesDifference / degreesPerLED + numLEDs / 2, 0, 0, 255);*/
 
     strip.show();
     Serial.print("heading:  ");
